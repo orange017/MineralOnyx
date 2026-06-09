@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<form method="post" enctype="multipart/form-data">
+
+    <input
+        name="collection_number"
+        placeholder="Номер"
+        value="{{ stone.collection_number if stone else '' }}">
+
+    <input
+        name="sample_name"
+        placeholder="Название"
+        value="{{ stone.sample_name if stone else '' }}">
+
+    <textarea
+        name="facts">{{ stone.facts if stone else '' }}</textarea>
+
+    <input
+        name="source_location"
+        placeholder="Место"
+        value="{{ stone.source_location if stone else '' }}">
+
+    <input
+        name="cost"
+        value="{{ stone.cost if stone else '' }}">
+
+    <input
+        name="estimated_price"
+        value="{{ stone.estimated_price if stone else '' }}">
+
+    <input type="file" name="photo">
+
+    <button type="submit">
+        Сохранить
+    </button>
+
+</form>
+
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<form>
+    <input
+        type="text"
+        name="q"
+        value="{{ query }}"
+        placeholder="Поиск">
+</form>
+
+<table>
+<tr>
+    <th>Номер</th>
+    <th>Название</th>
+    <th>Цена</th>
+</tr>
+{% for stone in stones %}
+<tr>
+    <td>{{ stone.collection_number }}</td>
+    <td>
+        <a href="/stone/{{ stone['index'] }}">
+            {{ stone.sample_name }}
+        </a>
+    </td>
+    <td>{{ stone.estimated_price }}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>{{ stone.sample_name }}</h2>
+
+{% if stone.photo %}
+<img
+    src="/photo/{{ stone['index'] }}"
+    width="400">
+{% endif %}
+
+<ul>
+    <li>Номер: {{ stone.collection_number }}</li>
+    <li>Место: {{ stone.source_location }}</li>
+    <li>Стоимость: {{ stone.cost }}</li>
+    <li>Оценка: {{ stone.estimated_price }}</li>
+</ul>
+
+<h3>Интересные факты</h3>
+
+<p>{{ stone.facts }}</p>
+
+<p>
+    <a href="/edit/{{ stone['index'] }}">Редактировать</a>
+    <a href="/delete/{{ stone['index'] }}">Удалить</a>
+</p>
+
+{% endblock %}

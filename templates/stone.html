@@ -22,8 +22,12 @@
 <p>{{ stone.facts }}</p>
 
 <p>
-    <a href="/edit/{{ stone['index'] }}">Редактировать</a>
-    <a href="/delete/{{ stone['index'] }}">Удалить</a>
-</p>
+    <a href="{{ url_for('edit', stone_id=stone.index) }}">
+        <img src="{{ url_for('static', filename='icons/edit.png') }}" class="icon">
+    </a>
+
+    <a href="{{ url_for('delete', stone_id=stone.index) }}">
+        <img src="{{ url_for('static', filename='icons/remove.png') }}" class="icon">
+    </a></p>
 
 {% endblock %}

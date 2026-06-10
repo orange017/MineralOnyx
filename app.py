@@ -1,48 +1,40 @@
-from flask import Flask, render_template, request, redirect, url_for
-from flask import Response
-import sqlite3
-import os
-from werkzeug.utils import secure_filename
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    Response
+)
+
+from model.stone import db, Stone
 
 app = Flask(__name__)
-
-DB_FILE = "stones.db"
-UPLOAD_FOLDER = "uploads"
-
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-
-def get_db():
-    conn = sqlite3.connect(DB_FILE)
-    conn.row_factory = sqlite3.Row
-    return conn
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///stones.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db.init_app(app)
 
 
 @app.route("/")
 def index():
-    q = request.args.get("q", "")
 
-    conn = get_db()
+    q = request.args.get(
+        "q",
+        ""
+    ).strip()
+
+    query = Stone.query
 
     if q:
-        stones = conn.execute(
-            """
-            SELECT *
-            FROM stones
-            WHERE collection_number LIKE ?
-               OR sample_name LIKE ?
-            ORDER BY collection_number
-            """,
-            (f"%{q}%", f"%{q}%")
-        ).fetchall()
-    else:
-        stones = conn.execute(
-            "SELECT * FROM stones ORDER BY collection_number"
-        ).fetchall()
+        query = query.filter(
+            (Stone.collection_number.contains(q))
+            |
+            (Stone.sample_name.contains(q))
+        )
 
-    conn.close()
+    stones = query.order_by(
+        Stone.collection_number
+    ).all()
 
     return render_template(
         "index.html",
@@ -53,15 +45,10 @@ def index():
 
 @app.route("/stone/<int:stone_id>")
 def stone(stone_id):
-    
-    conn = get_db()
 
-    stone = conn.execute(
-        "SELECT * FROM stones WHERE \"index\"=?",
-        (stone_id,)
-    ).fetchone()
-
-    conn.close()
+    stone = Stone.query.get_or_404(
+        stone_id
+    )
 
     return render_template(
         "stone.html",
@@ -69,86 +56,146 @@ def stone(stone_id):
     )
 
 
-@app.route("/edit/<int:stone_id>", methods=["GET", "POST"])
-def edit(stone_id):
-    conn = get_db()
+@app.route("/photo/<int:stone_id>")
+def photo(stone_id):
+
+    stone = Stone.query.get_or_404(
+        stone_id
+    )
+
+    if not stone.photo:
+        return "", 404
+
+    blob = stone.photo
+
+    if blob.startswith(b"\x89PNG"):
+        mime = "image/png"
+    elif blob.startswith(b"\xff\xd8"):
+        mime = "image/jpeg"
+    elif blob.startswith(b"GIF87a") or blob.startswith(b"GIF89a"):
+        mime = "image/gif"
+    else:
+        mime = "application/octet-stream"
+
+    return Response(
+        blob,
+        mimetype=mime
+    )
+
+
+@app.route(
+    "/new",
+    methods=["GET", "POST"]
+)
+def new():
 
     if request.method == "POST":
 
-        photo = request.files.get("photo")
+        photo_blob = None
 
-        filename = None
-
-        if photo and photo.filename:
-            filename = secure_filename(photo.filename)
-            photo.save(
-                os.path.join(
-                    app.config["UPLOAD_FOLDER"],
-                    filename
-                )
-            )
-
-        if filename:
-            conn.execute(
-                """
-                UPDATE stones
-                SET
-                    collection_number=?,
-                    sample_name=?,
-                    photo=?,
-                    facts=?,
-                    source_location=?,
-                    cost=?,
-                    estimated_price=?
-                WHERE \"index\"=?
-                """,
-                (
-                    request.form["collection_number"],
-                    request.form["sample_name"],
-                    filename,
-                    request.form["facts"],
-                    request.form["source_location"],
-                    request.form["cost"],
-                    request.form["estimated_price"],
-                    stone_id
-                )
-            )
-        else:
-            conn.execute(
-                """
-                UPDATE stones
-                SET
-                    collection_number=?,
-                    sample_name=?,
-                    facts=?,
-                    source_location=?,
-                    cost=?,
-                    estimated_price=?
-                WHERE \"index\"=?
-                """,
-                (
-                    request.form["collection_number"],
-                    request.form["sample_name"],
-                    request.form["facts"],
-                    request.form["source_location"],
-                    request.form["cost"],
-                    request.form["estimated_price"],
-                    stone_id
-                )
-            )
-
-        conn.commit()
-
-        return redirect(
-            url_for("stone", stone_id=stone_id)
+        photo = request.files.get(
+            "photo"
         )
 
-    stone = conn.execute(
-        "SELECT * FROM stones WHERE \"index\"=?",
-        (stone_id,)
-    ).fetchone()
+        if photo and photo.filename:
+            photo_blob = photo.read()
 
-    conn.close()
+        stone = Stone(
+            collection_number=request.form.get(
+                "collection_number"
+            ),
+            sample_name=request.form.get(
+                "sample_name"
+            ),
+            photo=photo_blob,
+            facts=request.form.get(
+                "facts"
+            ),
+            source_location=request.form.get(
+                "source_location"
+            ),
+            cost=request.form.get(
+                "cost"
+            ) or None,
+            estimated_price=request.form.get(
+                "estimated_price"
+            ) or None
+        )
+
+        db.session.add(stone)
+        db.session.commit()
+
+        return redirect("/")
+
+    return render_template(
+        "edit.html",
+        stone=None
+    )
+
+
+@app.route(
+    "/edit/<int:stone_id>",
+    methods=["GET", "POST"]
+)
+def edit(stone_id):
+
+    stone = Stone.query.get_or_404(
+        stone_id
+    )
+
+    if request.method == "POST":
+
+        stone.collection_number = (
+            request.form.get(
+                "collection_number"
+            )
+        )
+
+        stone.sample_name = (
+            request.form.get(
+                "sample_name"
+            )
+        )
+
+        stone.facts = (
+            request.form.get(
+                "facts"
+            )
+        )
+
+        stone.source_location = (
+            request.form.get(
+                "source_location"
+            )
+        )
+
+        stone.cost = (
+            request.form.get(
+                "cost"
+            ) or None
+        )
+
+        stone.estimated_price = (
+            request.form.get(
+                "estimated_price"
+            ) or None
+        )
+
+        photo = request.files.get(
+            "photo"
+        )
+
+        if photo and photo.filename:
+            stone.photo = photo.read()
+
+        db.session.commit()
+
+        return redirect(
+            url_for(
+                "stone",
+                stone_id=stone.index
+            )
+        )
 
     return render_template(
         "edit.html",
@@ -156,78 +203,22 @@ def edit(stone_id):
     )
 
 
-@app.route("/new", methods=["GET", "POST"])
-def new():
-
-    conn = get_db()
-
-    if request.method == "POST":
-
-        conn.execute(
-            """
-            INSERT INTO stones(
-                collection_number,
-                sample_name,
-                photo,
-                facts,
-                source_location,
-                cost,
-                estimated_price
-            )
-            VALUES(?,?,?,?,?,?,?)
-            """,
-            (
-                request.form["collection_number"],
-                request.form["sample_name"],
-                "",
-                request.form["facts"],
-                request.form["source_location"],
-                request.form["cost"],
-                request.form["estimated_price"]
-            )
-        )
-
-        conn.commit()
-
-        return redirect("/")
-
-    return render_template("edit.html", stone=None)
-
-
-@app.route("/delete/<int:stone_id>")
+@app.route(
+    "/delete/<int:stone_id>"
+)
 def delete(stone_id):
 
-    conn = get_db()
-
-    conn.execute(
-        "DELETE FROM stones WHERE \"index\"=?",
-        (stone_id,)
+    stone = Stone.query.get_or_404(
+        stone_id
     )
 
-    conn.commit()
-    conn.close()
+    db.session.delete(stone)
+    db.session.commit()
 
     return redirect("/")
 
 
-@app.route("/photo/<int:stone_id>")
-def photo(stone_id):
-    conn = sqlite3.connect("stones.db")
-
-    row = conn.execute(
-        "SELECT photo FROM stones WHERE \"index\"=?",
-        (stone_id,)
-    ).fetchone()
-
-    conn.close()
-
-    if row is None or row[0] is None:
-        return "", 404
-
-    return Response(
-        row[0],
-        mimetype="image/jpeg"
-    )
-
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(
+        debug=True
+    )

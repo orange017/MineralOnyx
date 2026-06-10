@@ -2,35 +2,74 @@
 
 {% block content %}
 
+
 <form method="post" enctype="multipart/form-data">
 
-    <input
-        name="collection_number"
-        placeholder="Номер"
-        value="{{ stone.collection_number if stone else '' }}">
+    <div class="form-group">
+        <label>Коллекционный номер</label>
+        <input
+            type="text"
+            name="collection_number"
+            value="{{ stone.collection_number if stone else '' }}"
+        >
+    </div>
 
-    <input
-        name="sample_name"
-        placeholder="Название"
-        value="{{ stone.sample_name if stone else '' }}">
+    <div class="form-group">
+        <label>Название образца</label>
+        <input
+            type="text"
+            name="sample_name"
+            value="{{ stone.sample_name if stone else '' }}"
+        >
+    </div>
 
-    <textarea
-        name="facts">{{ stone.facts if stone else '' }}</textarea>
+    <div class="form-group">
+        <label>Фотография</label>
+        {% if stone.photo %}
+        <img
+            src="/photo/{{ stone['index'] }}"
+            width="400">
+        {% endif %}
+        <input
+            type="file"
+            name="photo"
+            accept="image/*"
+        >
+    </div>
 
-    <input
-        name="source_location"
-        placeholder="Место"
-        value="{{ stone.source_location if stone else '' }}">
+    <div class="form-group">
+        <label>Интересные факты</label>
+        <textarea
+            name="facts"
+            rows="10"
+        >{{ stone.facts if stone else '' }}</textarea>
+    </div>
 
-    <input
-        name="cost"
-        value="{{ stone.cost if stone else '' }}">
+    <div class="form-group">
+        <label>Место отбора / Кем доставлен</label>
+        <textarea
+            name="source_location"
+            rows="5"
+        >{{ stone.source_location if stone else '' }}</textarea>
+    </div>
 
-    <input
-        name="estimated_price"
-        value="{{ stone.estimated_price if stone else '' }}">
+    <div class="form-group">
+        <label>Стоимость</label>
+        <input
+            type="text"
+            name="cost"
+            value="{{ stone.cost if stone else '' }}"
+        >
+    </div>
 
-    <input type="file" name="photo">
+    <div class="form-group">
+        <label>Примерная цена</label>
+        <input
+            type="text"
+            name="estimated_price"
+            value="{{ stone.estimated_price if stone else '' }}"
+        >
+    </div>
 
     <button type="submit">
         Сохранить

@@ -9,8 +9,14 @@
 
 <header>
     <h1>Коллекция камней</h1>
-    <a href="/">Главная</a>
-    <a href="/new">Добавить</a>
+
+    <a href="{{ url_for('index') }}">
+        <img src="{{ url_for('static', filename='icons/home.png') }}" class="icon">
+    </a>
+
+    <a href="{{ url_for('new') }}">
+        <img src="{{ url_for('static', filename='icons/add.png') }}" class="icon">
+    </a>    
 </header>
 
 {% block content %}

@@ -31,9 +31,9 @@ class Stone(db.Model):
     )
 
     cost = db.Column(
-        db.Float
+        db.Text
     )
 
     estimated_price = db.Column(
-        db.Float
+        db.Text
     )

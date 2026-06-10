@@ -10,11 +10,11 @@
 <header>
     <h1>Коллекция камней</h1>
 
-    <a href="{{ url_for('index') }}">
+    <a href="{{ url_for('index') }}" title="На главную">
         <img src="{{ url_for('static', filename='icons/home.png') }}" class="icon">
     </a>
 
-    <a href="{{ url_for('new') }}">
+    <a href="{{ url_for('new') }}" title="Добавить">
         <img src="{{ url_for('static', filename='icons/add.png') }}" class="icon">
     </a>    
 </header>

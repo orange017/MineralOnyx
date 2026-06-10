@@ -71,8 +71,14 @@
         >
     </div>
 
-    <button type="submit">
-        Сохранить
+    <button
+        type="submit"
+        class="icon-button"
+        title="Сохранить">
+        <img
+            src="{{ url_for('static', filename='icons/save.png') }}"
+            class="icon"
+            alt="Сохранить">
     </button>
 
 </form>

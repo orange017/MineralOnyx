@@ -2,32 +2,74 @@
 
 {% block content %}
 
-<h2>{{ stone.sample_name }}</h2>
+<div class="stone-card">
 
-{% if stone.photo %}
-<img
-    src="/photo/{{ stone['index'] }}"
-    width="400">
-{% endif %}
+    <h2 class="stone-title">
+        {{ stone.sample_name }}
+    </h2>
 
-<ul>
-    <li>Номер: {{ stone.collection_number }}</li>
-    <li>Место: {{ stone.source_location }}</li>
-    <li>Стоимость: {{ stone.cost }}</li>
-    <li>Оценка: {{ stone.estimated_price }}</li>
-</ul>
+    <div class="stone-layout">
 
-<h3>Интересные факты</h3>
+        {% if stone.photo %}
+        <div class="stone-photo">
+            <img
+                src="/photo/{{ stone['index'] }}"
+                alt="{{ stone.sample_name }}">
+        </div>
+        {% endif %}
 
-<p>{{ stone.facts }}</p>
+        <div class="stone-info">
 
-<p>
-    <a href="{{ url_for('edit', stone_id=stone.index) }}">
-        <img src="{{ url_for('static', filename='icons/edit.png') }}" class="icon">
-    </a>
+            <div class="info-row">
+                <span class="label">Коллекционный номер</span>
+                <span>{{ stone.collection_number }}</span>
+            </div>
 
-    <a href="{{ url_for('delete', stone_id=stone.index) }}">
-        <img src="{{ url_for('static', filename='icons/remove.png') }}" class="icon">
-    </a></p>
+            <div class="info-row">
+                <span class="label">Место отбора</span>
+                <span>{{ stone.source_location }}</span>
+            </div>
+
+            <div class="info-row">
+                <span class="label">Стоимость</span>
+                <span>{{ stone.cost }}</span>
+            </div>
+
+            <div class="info-row">
+                <span class="label">Оценочная стоимость</span>
+                <span>{{ stone.estimated_price }}</span>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="facts-section">
+
+        <h3>Интересные факты</h3>
+
+        <div class="facts-text">
+            {{ stone.facts }}
+        </div>
+
+    </div>
+
+    <div class="actions">
+
+        <a href="{{ url_for('edit', stone_id=stone.index) }}"
+           title="Редактировать">
+            <img src="{{ url_for('static', filename='icons/edit.png') }}"
+                 class="icon">
+        </a>
+
+        <a href="{{ url_for('delete', stone_id=stone.index) }}"
+           title="Удалить">
+            <img src="{{ url_for('static', filename='icons/remove.png') }}"
+                 class="icon">
+        </a>
+
+    </div>
+
+</div>
 
 {% endblock %}

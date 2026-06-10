@@ -1,2 +1,10 @@
 *.xlsx
 *.db
+
+# Ignore all __pycache__ directories recursively
+__pycache__/
+
+# It is also good practice to ignore stray compiled files
+*.pyc
+*.pyo
+*.pyd

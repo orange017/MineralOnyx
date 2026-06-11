@@ -13,7 +13,10 @@
         {% if stone.photo %}
         <div class="stone-photo">
             <img
-                src="/photo/{{ stone['index'] }}"
+                src="{{ url_for(
+                    'static',
+                    filename='uploads/' + stone.photo
+                ) }}"
                 alt="{{ stone.sample_name }}">
         </div>
         {% endif %}
@@ -48,21 +51,21 @@
 
         <h3>Интересные факты</h3>
 
-        <div class="facts-text">
-            {{ stone.facts }}
+        <div class="facts-text markdown-body">
+            {{ facts_html|safe }}
         </div>
 
     </div>
 
     <div class="actions">
 
-        <a href="{{ url_for('edit', stone_id=stone.index) }}"
+        <a href="{{ url_for('edit', stone_id=stone.id) }}"
            title="Редактировать">
             <img src="{{ url_for('static', filename='icons/edit.png') }}"
                  class="icon">
         </a>
 
-        <a href="{{ url_for('delete', stone_id=stone.index) }}"
+        <a href="{{ url_for('delete', stone_id=stone.id) }}"
            title="Удалить">
             <img src="{{ url_for('static', filename='icons/remove.png') }}"
                  class="icon">

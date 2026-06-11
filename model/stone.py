@@ -5,9 +5,10 @@ db = SQLAlchemy()
 class Stone(db.Model):
     __tablename__ = "stones"
 
-    index = db.Column(
+    id = db.Column(
         db.Integer,
-        primary_key=True
+        primary_key=True,
+        autoincrement=True
     )
 
     collection_number = db.Column(
@@ -19,7 +20,7 @@ class Stone(db.Model):
     )
 
     photo = db.Column(
-        db.LargeBinary
+        db.String
     )
 
     facts = db.Column(

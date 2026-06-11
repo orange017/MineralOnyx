@@ -1,6 +1,9 @@
 *.xlsx
 *.db
 
+# Ignore upload images
+static/uploads
+
 # Ignore all __pycache__ directories recursively
 __pycache__/
 

@@ -6,13 +6,38 @@ from flask import (
     url_for,
     Response
 )
-
+from markdown import markdown
+from werkzeug.utils import secure_filename
+import os
+import uuid
+from itertools import count
+from pathlib import Path
 from model.stone import db, Stone
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///stones.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db.init_app(app)
+
+UPLOAD_DIR = Path(app.static_folder) / "uploads"
+ALLOWED_EXTENSIONS = {
+    "jpg",
+    "jpeg",
+    "png",
+    "gif",
+    "webp"
+}
+
+def upload_photo(request):
+    photo = request.files.get("photo")
+    if photo and photo.filename:
+        ext = Path(photo.filename).suffix.lower().lstrip(".")
+        if ext in ALLOWED_EXTENSIONS:
+            UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+            new_filename = f"{uuid.uuid4()}.{ext}"
+            filepath = UPLOAD_DIR / new_filename
+            photo.save(filepath)
+            return new_filename
 
 
 @app.route("/")
@@ -46,40 +71,20 @@ def index():
 @app.route("/stone/<int:stone_id>")
 def stone(stone_id):
 
-    stone = Stone.query.get_or_404(
-        stone_id
+    stone = Stone.query.get_or_404(stone_id)
+
+    facts_html = markdown(
+        stone.facts or "",
+        extensions=[
+            "tables",
+            "fenced_code"
+        ]
     )
 
     return render_template(
         "stone.html",
-        stone=stone
-    )
-
-
-@app.route("/photo/<int:stone_id>")
-def photo(stone_id):
-
-    stone = Stone.query.get_or_404(
-        stone_id
-    )
-
-    if not stone.photo:
-        return "", 404
-
-    blob = stone.photo
-
-    if blob.startswith(b"\x89PNG"):
-        mime = "image/png"
-    elif blob.startswith(b"\xff\xd8"):
-        mime = "image/jpeg"
-    elif blob.startswith(b"GIF87a") or blob.startswith(b"GIF89a"):
-        mime = "image/gif"
-    else:
-        mime = "application/octet-stream"
-
-    return Response(
-        blob,
-        mimetype=mime
+        stone=stone,
+        facts_html=facts_html
     )
 
 
@@ -91,15 +96,6 @@ def new():
 
     if request.method == "POST":
 
-        photo_blob = None
-
-        photo = request.files.get(
-            "photo"
-        )
-
-        if photo and photo.filename:
-            photo_blob = photo.read()
-
         stone = Stone(
             collection_number=request.form.get(
                 "collection_number"
@@ -107,7 +103,7 @@ def new():
             sample_name=request.form.get(
                 "sample_name"
             ),
-            photo=photo_blob,
+            photo=upload_photo(request),
             facts=request.form.get(
                 "facts"
             ),
@@ -157,6 +153,10 @@ def edit(stone_id):
             )
         )
 
+        stone.photo = (
+            upload_photo(request)
+        )
+
         stone.facts = (
             request.form.get(
                 "facts"
@@ -181,19 +181,12 @@ def edit(stone_id):
             ) or None
         )
 
-        photo = request.files.get(
-            "photo"
-        )
-
-        if photo and photo.filename:
-            stone.photo = photo.read()
-
         db.session.commit()
 
         return redirect(
             url_for(
                 "stone",
-                stone_id=stone.index
+                stone_id=stone.id
             )
         )
 

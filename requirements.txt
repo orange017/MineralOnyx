@@ -2,3 +2,4 @@ flask
 pandas 
 openpyxl
 flask_sqlalchemy
+markdown

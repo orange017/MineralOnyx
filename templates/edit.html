@@ -27,7 +27,10 @@
         <label>Фотография</label>
         {% if stone.photo %}
         <img
-            src="/photo/{{ stone['index'] }}"
+            src="{{ url_for(
+                    'static',
+                    filename='uploads/' + stone.photo
+                ) }}" 
             width="400">
         {% endif %}
         <input
